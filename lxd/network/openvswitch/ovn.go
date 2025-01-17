@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"netip"
 	"os"
 	"strconv"
 	"strings"
@@ -1377,6 +1378,7 @@ func (o *OVN) LogicalSwitchPortSetDNS(switchName OVNSwitch, portName OVNSwitchPo
 
 	// Only include DNS name record if IPs supplied.
 	if len(dnsIPs) > 0 {
+		lowerDnsName := strings.ToLower(dnsName)
 		var dnsIPsStr strings.Builder
 		for i, dnsIP := range dnsIPs {
 			if i > 0 {
@@ -1386,7 +1388,17 @@ func (o *OVN) LogicalSwitchPortSetDNS(switchName OVNSwitch, portName OVNSwitchPo
 			dnsIPsStr.WriteString(dnsIP.String())
 		}
 
-		cmdArgs = append(cmdArgs, fmt.Sprintf(`records={"%s"="%s"}`, strings.ToLower(dnsName), dnsIPsStr.String()))
+		cmdArgs = append(cmdArgs, fmt.Sprintf(`records={"%s"="%s"`, lowerDnsName, dnsIPsStr.String()))
+
+		for i, dnsIP = range dnsIPs {
+			addr, ok := netip.AddrFromSlice(dnsIP)
+			if addr.Is6() {
+				cmdArgs = append(cmdArgs, fmt.Sprintf(`,"%s"="%s"`, reverse6(dnsIP.String(), lowerDnsName)))
+			} else {
+				cmdArgs = append(cmdArgs, fmt.Sprintf(`,"%s"="%s"`, reverse(dnsIP.String(), lowerDnsName)))
+			}
+		}
+		cmdArgs = append(cmdArgs, "}")
 	}
 
 	dnsUUID = strings.TrimSpace(dnsUUID)
