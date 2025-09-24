@@ -1539,6 +1539,12 @@ func (n *bridge) setup(oldConfig map[string]string) error {
 		return err
 	}
 
+	// Cleanup any existing dummy mtu device.
+	err = maybeDeleteLink(n.name + "-mtu")
+	if err != nil {
+		return err
+	}
+
 	// Attempt to add a dummy device to the bridge to force the MTU.
 	if bridge.MTU != bridgeMTUDefault && n.config["bridge.driver"] != "openvswitch" {
 		dummy := &ip.Dummy{
@@ -2393,6 +2399,12 @@ func (n *bridge) Stop() error {
 
 	// Cleanup any existing tunnel device.
 	err = n.deleteTunnels(getTunnels(n.config))
+	if err != nil {
+		return err
+	}
+
+	// Cleanup any existing dummy mtu device.
+	err = maybeDeleteLink(n.name + "-mtu")
 	if err != nil {
 		return err
 	}

@@ -162,6 +162,7 @@ test_container_devices_nic_sriov() {
   endNicCount=$(find /sys/class/net | wc -l)
   if [ "$startNicCount" != "$endNicCount" ]; then
     echo "leftover NICS detected"
+    ip li
     false
   fi
 }

@@ -150,6 +150,7 @@ test_container_devices_infiniband_physical() {
   endNicCount=$(find /sys/class/net | wc -l)
   if [ "$startNicCount" != "$endNicCount" ]; then
     echo "leftover NICS detected"
+    ip li
     false
   fi
 }
